@@ -253,7 +253,7 @@ function methodswith(@nospecialize(t::Type); supertypes::Bool=false)
 end
 
 # subtypes
-function _subtypes_in!(mods::Array, @nospecialize(x::Type))
+function _subtypes_in!(mods::Array, @nospecialize(x::Type); sort::Bool=true)
     xt = unwrap_unionall(x)
     if !isabstracttype(x) || !isa(xt, DataType)
         # Fast path
@@ -278,16 +278,20 @@ function _subtypes_in!(mods::Array, @nospecialize(x::Type))
             end
         end
     end
-    return permute!(sts, sortperm(map(string, sts)))
+    sort && permute!(sts, sortperm(map(string, sts)))
+    return sts
 end
 
-subtypes(m::Module, x::Type) = _subtypes_in!([m], x)
+subtypes(m::Module, x::Type; sort::Bool=true) = _subtypes_in!([m], x; sort)
 
 """
-    subtypes(T::DataType)
+    subtypes(T::DataType; sort::Bool=true)
 
 Return a list of immediate subtypes of DataType `T`. Note that all currently loaded subtypes
 are included, including those not visible in the current module.
+
+If `sort` is `true` (the default), the result is sorted alphabetically. Set `sort` to
+`false` to skip sorting for improved performance.
 
 See also [`supertype`](@ref), [`supertypes`](@ref), [`methodswith`](@ref).
 
@@ -300,7 +304,7 @@ julia> subtypes(Integer)
  Unsigned
 ```
 """
-subtypes(x::Type) = _subtypes_in!(Base.loaded_modules_array(), x)
+subtypes(x::Type; sort::Bool=true) = _subtypes_in!(Base.loaded_modules_array(), x; sort)
 
 """
     supertypes(T::Type)
